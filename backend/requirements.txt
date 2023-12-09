@@ -1,0 +1,10 @@
+Django==4.2.7
+djangorestframework==3.14.0
+django-cors-headers
+djoser
+psycopg2-binary
+pillow
+python-dotenv
+reportlab
+django-filter
+drf-extra-fields
