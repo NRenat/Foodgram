@@ -1,5 +1,3 @@
-from django.db.models import Sum
-from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
@@ -9,17 +7,13 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from reportlab.pdfgen import canvas
-from io import BytesIO
-
-from foodgram.models import Recipe, Ingredient, Tag, Favorite, ShoppingCart, \
-    RecipeIngredient
-from foodgram_backend.settings import PDF_NAME
+from foodgram.models import Recipe, Ingredient, Tag, Favorite, ShoppingCart
 from .serializers import RecipeSerializer, IngredientSerializer, TagSerializer
 from .serializers import RecipeWriteSerializer, FavoriteSerializer, \
     ShoppingCartSerializer
 from .permissions import OwnerAdminReadOnly
 from .filters import RecipeFilter
+from .utils import download_shopping_cart
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -86,7 +80,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    # @shopping_cart.mapping.delete
+    @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, pk):
         user = request.user
         recipe = get_object_or_404(Recipe, id=pk)
@@ -98,33 +92,4 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, permission_classes=(IsAuthenticated,))
     def download_shopping_cart(self, request):
-        ingredients = RecipeIngredient.objects.filter(
-            recipe__shopping_carts__user=request.user
-        ).order_by(
-            'ingredient__name'
-        ).values(
-            'ingredient__name',
-            'ingredient__measurement_unit'
-        ).annotate(ingredient_total=Sum('amount'))
-
-        buffer = BytesIO()
-
-        pdf = canvas.Canvas(buffer)
-
-        pdf.drawString(100, 800, 'Shopping Cart:')
-        y_position = 780
-        for ingredient in ingredients:
-            line = (f'{ingredient["ingredient__name"]} - '
-                    f'{ingredient["ingredient_total"]} '
-                    f'{ingredient["ingredient__measurement_unit"]}')
-            pdf.drawString(100, y_position, line)
-            y_position -= 20
-
-        pdf.showPage()
-        pdf.save()
-
-        buffer.seek(0)
-        response = HttpResponse(buffer, content_type='application/pdf')
-        response[
-            'Content-Disposition'] = f'attachment; filename="{PDF_NAME}"'
-        return response
+        return download_shopping_cart(self, request)

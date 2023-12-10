@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import UniqueConstraint
 
@@ -25,10 +26,11 @@ class Tag(models.Model):
 
 class Ingredient(models.Model):
     name = models.CharField(max_length=64, verbose_name='Ingredient')
-    measurement_unit = models.CharField(max_length=2,
+    measurement_unit = models.CharField(max_length=10,
                                         verbose_name='Measurement Unit')
 
     class Meta:
+        unique_together = ('name', 'measurement_unit')
         verbose_name = 'Ingredient'
         verbose_name_plural = 'Ingredients'
 
@@ -44,24 +46,27 @@ class Recipe(models.Model):
         verbose_name='Author recipe'
     )
     name = models.CharField(
-        max_length=200,
+        max_length=64,
         verbose_name='Recipe name'
     )
     image = models.ImageField(
         verbose_name='Picture',
     )
     text = models.TextField(
-        max_length=200,
         verbose_name='Recipe description'
     )
     tags = models.ManyToManyField(Tag, verbose_name='Tags')
     cooking_time = models.PositiveSmallIntegerField(
-        verbose_name='Cooking time')
+        verbose_name='Cooking time',
+        validators=(MinValueValidator(1, message='Value must be at least 1'),))
     ingredients = models.ManyToManyField(Ingredient,
                                          verbose_name='Recipe Ingredients',
                                          through='RecipeIngredient')
 
+    created_at = models.DateTimeField(auto_now_add=True)
+
     class Meta:
+        ordering = ('-created_at',)
         verbose_name = 'Recipe'
         verbose_name_plural = 'Recipes'
 
@@ -76,7 +81,12 @@ class RecipeIngredient(models.Model):
                                    verbose_name='Ingredient')
     amount = models.PositiveSmallIntegerField(
         null=False,
-        verbose_name='Amount of ingredients')
+        verbose_name='Amount of ingredients',
+        validators=(MinValueValidator(1, message='Value must be at least 1'),)
+    )
+
+    class Meta:
+        unique_together = ('recipe', 'ingredient')
 
 
 class ShoppingCart(models.Model):

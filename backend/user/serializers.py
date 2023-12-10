@@ -91,7 +91,10 @@ class FollowListSerializer(serializers.ModelSerializer):
         context = {'request': request}
         recipes_limit = request.query_params.get('recipes_limit')
         if recipes_limit is not None:
-            recipes = obj.recipes.all()[:int(recipes_limit)]
+            try:
+                recipes = obj.recipes.all()[:int(recipes_limit)]
+            except ValueError:
+                recipes = obj.recipes.all()
         else:
             recipes = obj.recipes.all()
         return FollowRecipesSerializer(
