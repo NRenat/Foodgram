@@ -9,7 +9,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         try:
-            with open('../data/ingredients.csv', 'r',
+            with open('./data/ingredients.csv', 'r',
                       encoding='utf-8') as file:
                 reader = csv.reader(file, delimiter=',')
                 for row in reader:
