@@ -3,11 +3,11 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from foodgram.models import Recipe, Ingredient, Tag, Favorite, ShoppingCart
+from .pagination import Paginator
 from .serializers import RecipeSerializer, IngredientSerializer, TagSerializer
 from .serializers import RecipeWriteSerializer, FavoriteSerializer, \
     ShoppingCartSerializer
@@ -35,7 +35,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = (OwnerAdminReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
-    pagination_class = LimitOffsetPagination
+    pagination_class = Paginator
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
