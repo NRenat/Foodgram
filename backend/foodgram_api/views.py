@@ -1,3 +1,5 @@
+from urllib.parse import unquote
+
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
@@ -28,6 +30,13 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     filter_backends = (SearchFilter,)
     search_fields = ('^name',)
+
+    def get_queryset(self):
+        name_param = self.request.query_params.get('name', None)
+        if name_param:
+            decoded_name = unquote(name_param)
+            return self.queryset.filter(name__icontains=decoded_name)
+        return self.queryset
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
