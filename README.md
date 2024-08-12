@@ -28,9 +28,7 @@ sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/col
 
 ## Адрес проекта:
 
-```
 http://158.160.27.119/
-```
 
 ## Технологии
 * Django
